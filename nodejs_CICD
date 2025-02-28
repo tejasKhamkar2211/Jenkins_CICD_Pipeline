@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+    tools {
+        nodejs "mynode"
+    }
+ 
+    stages {
+        stage('git cloning') {
+            steps {
+                echo 'cloning files from github'
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/tejasKhamkar2211/nodepipeline.git']])
+            }
+        }
+        stage('Build') {
+            steps {
+                echo 'Building nodejs project'
+                sh "npm install"
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing project'
+                sh "./node_modules/mocha/bin/_mocha --exit ./test/test.js"
+                
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying nodejs project on live server'
+                sshagent(['98.81.77.214']) {
+    // some block
+                sh '''
+                        ssh -o StrictHostKeyChecking=no ec2-user@98.81.77.214 << EOF
+                        echo "Connected to Server"
+                        cd /home/ec2-user/nodejsapp
+                        git pull origin master
+                        npm install
+                        sudo pm2 restart index.js
+                        echo "Deployment Completed!"
+                        exit
+                        EOF
+                    '''
+}
+            }
+        }
+    }
+}
