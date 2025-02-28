@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+ 
+    stages {
+        stage('git cloning') {
+            steps {
+                echo 'cloning files from github'
+            }
+        }
+        stage('Build') {
+            steps {
+                echo 'Building nodejs project'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing project'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying nodejs project on live server'
+            }
+        }
+    }
+}
