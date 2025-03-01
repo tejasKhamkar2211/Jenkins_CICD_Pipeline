@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+ 
+    stages {
+        stage('git cloning') {
+            steps {
+                echo 'cloning files from github'
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/tejasKhamkar2211/python-deploy.git']])
+            }
+        }
+        stage('Build') {
+            steps {
+                echo 'Building nodejs project'
+                sh '''
+                        python3 -m venv myenv
+                        source myenv/bin/activate
+                        pip install -r requirements.txt
+                        echo "push completed"
+                        exit
+                        EOF
+                    '''
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing project'
+                sh '''
+                        python3 -m venv myenv
+                        source myenv/bin/activate
+                        pip install -r requirements.txt
+                        python3 -m unittest discover -s test
+                        echo "test completed"
+                        exit
+                        EOF
+                    '''
+                
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying nodejs project on live server'
+                sshagent(['02312f7c-0000-4791-8b39-57682f49eaf6']) {
+                // some block
+                sh '''
+                        ssh -o StrictHostKeyChecking=no ec2-user@54.242.89.202 << EOF
+                        echo "Connected to Server"
+                        cd /home/ec2-user/pythonapp
+                        git pull origin master
+                        sudo service gunicorn restart
+                        echo "Deployment Completed!"
+                        exit
+                        EOF
+                    '''
+                }
+            }
+        }
+    }
+}
